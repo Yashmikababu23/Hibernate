@@ -3,16 +3,19 @@ package com.fnf.service;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fnf.Repository.EmployeeDao;
 import com.fnf.Repository.PayrollHisRepository;
 import com.fnf.Repository.PayrollRepository;
 import com.fnf.model.Bonus;
@@ -29,14 +32,66 @@ public class PayrollService implements IPayrollService {
 	PayrollRepository payrollRepository;
 	@Autowired
 	PayrollHisRepository payrollHisRepository;
-	@Autowired
-	EmployeeDao employeeDao;
-
+	
 	public Employee getEmployeeById(int employeeId) {
 		return payrollRepository.findById(employeeId).orElse(null);
 	}
 
 	public List<Employee> getEmployeeDetails() {
+
+		List<Employee> employees = (List<Employee>) payrollRepository.findAll();
+		for (Employee employee : employees) {
+			Date today = new Date();
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(today);
+			int currentMonth = cal.get(Calendar.MONTH);
+			Date payCyc = employee.getPaymentCycle();
+			Calendar calc = Calendar.getInstance();
+			calc.setTime(payCyc);
+			int payMonth = calc.get(Calendar.MONTH);
+			Date doj = employee.getDateOfJoining();
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(doj);
+			int joiningMonth = calendar.get(Calendar.MONTH);
+
+			if (currentMonth == payMonth) {
+
+				if (joiningMonth == payMonth) {
+					// calculate diff btw doj and paycyc
+					int days = Days.daysBetween(new LocalDate(doj.getTime()), new LocalDate(payCyc.getTime())).getDays()
+							+ 1;
+					// calculate no of days in paymonth
+					int payMonthDays = calc.getActualMaximum(Calendar.DAY_OF_MONTH);
+					// calcualte the salary to be paid for that month
+					float dueSalary = (employee.getMonthlyAmt().floatValue() / payMonthDays) * days;
+					BigDecimal monthAmt = new BigDecimal(dueSalary);
+					monthAmt.setScale(3, BigDecimal.ROUND_HALF_UP);
+					employee.setMonthlyAmt(monthAmt);
+
+				} else if (joiningMonth + 1 == payMonth) {
+					// calculate no of days in paymonth
+					int payMonthDays = calc.getActualMaximum(Calendar.DAY_OF_MONTH);
+					// calculate no of days in join month
+					int joinMonthDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+					// calculate the no of days btw doj and payday
+					int days = Days.daysBetween(new LocalDate(doj.getTime()), new LocalDate(payCyc.getTime())).getDays()
+							+ 1;
+					// no of days btw doj and payday - no of days in the payable month
+					int dueDays = days - payMonthDays;
+					// calculate the amount to be paid for the joining month
+					float dueSalary = (employee.getMonthlyAmt().floatValue() / joinMonthDays) * dueDays;
+
+					// calculate total amount to be paid for payable month
+					float totalSalary = dueSalary + employee.getMonthlyAmt().floatValue();
+					BigDecimal monthAmt = new BigDecimal(totalSalary);
+					monthAmt.setScale(3, BigDecimal.ROUND_HALF_UP);
+					employee.setMonthlyAmt(monthAmt);
+
+				}
+
+			}
+
+		}
 		return (List<Employee>) payrollRepository.findAll();
 	}
 
@@ -52,12 +107,10 @@ public class PayrollService implements IPayrollService {
 			boolean bonusIndicator = false;
 			ListIterator<Employee> itr = employees.listIterator();
 			while (itr.hasNext()) {
-				Employee emp = (Employee)itr.next();
-				emp.setDoj(new SimpleDateFormat("dd/MM/yyyy").format(emp.getDateOfJoining()));
-				emp.setPaymentCyc(new SimpleDateFormat("dd/MM/yyyy").format(emp.getPaymentCycle()));
+				Employee emp = (Employee) itr.next();
 				if (emp.getTotalVariableAmt() != null && emp.getTotalVariableAmt() != BigDecimal.ZERO) {
 					ListIterator<Variable> itrvar = emp.getVariables().listIterator();
-					while (itrvar.hasNext())  {
+					while (itrvar.hasNext()) {
 						Variable v = itrvar.next();
 						if (month.equalsIgnoreCase(v.getPayableMonth())) {
 							variableIndicator = true;
@@ -87,7 +140,6 @@ public class PayrollService implements IPayrollService {
 				}
 			}
 		}
-		// employees=employeeDao.getEmployee();
 		return employees;
 
 	}
@@ -125,13 +177,6 @@ public class PayrollService implements IPayrollService {
 
 	@Override
 	public void createEmployee(Employee employee) {
-		// calculatePayableMonth(employee);
-		try {
-			employee.setDateOfJoining(new SimpleDateFormat("dd/MM/yyyy").parse(employee.getDoj()));
-			employee.setPaymentCycle(new SimpleDateFormat("dd/MM/yyyy").parse(employee.getPaymentCyc()));
-		} catch (Exception e) {
-			logger.error("Exception in createEmployee " + e.getMessage());
-		}
 		payrollRepository.save(employee);
 	}
 
@@ -178,90 +223,6 @@ public class PayrollService implements IPayrollService {
 		payrollRepository.deleteById(employeeId);
 	}
 
-	/*
-	 * private void calculatePayableMonth(Employee employee) { String[] months = {
-	 * "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV",
-	 * "DEC" }; String dateofJoining = employee.getDateofJoining(); Date date =
-	 * null; try { date = new SimpleDateFormat("dd/MM/yyyy").parse(dateofJoining); }
-	 * catch (ParseException e) {
-	 * logger.error("Exception in calculatePayableMonth "+e.getMessage()); }
-	 * employee.setDOJ(date); Date DOJ = employee.getDOJ(); Calendar cal =
-	 * Calendar.getInstance(); cal.setTime(DOJ); int day =
-	 * cal.get(Calendar.DAY_OF_MONTH); int month = cal.get(Calendar.MONTH); int year
-	 * = cal.get(Calendar.YEAR); int installments = employee.getInstallments();
-	 * String type = employee.getType(); List<Variable> variables = new
-	 * ArrayList<Variable>(); List<Bonus> bonuses = new ArrayList<Bonus>();
-	 * 
-	 * if (type != null) { if (installments == 0)
-	 * System.out.println("installments cannot be empty");
-	 * 
-	 * if (type.equalsIgnoreCase("V")) { if (installments == 4) { if (month + 2 <=
-	 * 11) { Variable v1 = new Variable(installments, months[month + 2]);
-	 * variables.add(v1); } else if (month + 2 > 11) { int mon = (month + 2) - 12;
-	 * Variable v1 = new Variable(installments, months[mon]); variables.add(v1); }
-	 * if (month + 5 <= 11) { Variable v2 = new Variable(installments, months[month
-	 * + 5]); variables.add(v2); } else if (month + 5 > 11) { int mon = (month + 5)
-	 * - 12; Variable v2 = new Variable(installments, months[mon]);
-	 * variables.add(v2); } if (month + 8 <= 11) { Variable v3 = new
-	 * Variable(installments, months[month + 8]); variables.add(v3); } else if
-	 * (month + 8 > 11) { int mon = (month + 8) - 12; Variable v3 = new
-	 * Variable(installments, months[mon]); variables.add(v3); } if (month + 11 <=
-	 * 11) { Variable v4 = new Variable(installments, months[month + 11]);
-	 * variables.add(v4); } else if (month + 11 > 11) { int mon = (month + 11) - 12;
-	 * Variable v4 = new Variable(installments, months[mon]); variables.add(v4); }
-	 * employee.setVariables(variables); } else if (installments == 3) { if (month +
-	 * 3 <= 11) { Variable v1 = new Variable(installments, months[month + 3]);
-	 * variables.add(v1); } else if (month + 3 > 11) { int mon = (month + 3) - 12;
-	 * Variable v1 = new Variable(installments, months[mon]); variables.add(v1); }
-	 * if (month + 7 <= 11) { Variable v2 = new Variable(installments, months[month
-	 * + 7]); variables.add(v2); } else if (month + 7 > 11) { int mon = (month + 7)
-	 * - 12; Variable v2 = new Variable(installments, months[mon]);
-	 * variables.add(v2); } if (month + 11 <= 11) { Variable v3 = new
-	 * Variable(installments, months[month + 11]); variables.add(v3); } else if
-	 * (month + 11 > 11) { int mon = (month + 11) - 12; Variable v3 = new
-	 * Variable(installments, months[mon]); variables.add(v3); }
-	 * employee.setVariables(variables); } else if (installments == 2) { if (month +
-	 * 5 <= 11) { Variable v1 = new Variable(installments, months[month + 5]);
-	 * variables.add(v1); } else if (month + 5 > 11) { int mon = (month + 5) - 12;
-	 * Variable v1 = new Variable(installments, months[mon]); variables.add(v1); }
-	 * if (month + 11 <= 11) { Variable v2 = new Variable(installments, months[month
-	 * + 11]); variables.add(v2); } else if (month + 11 > 11) { int mon = (month +
-	 * 11) - 12; Variable v2 = new Variable(installments, months[mon]);
-	 * variables.add(v2); } employee.setVariables(variables); } } else if
-	 * (type.equalsIgnoreCase("B")) { if (installments == 4) { if (month + 2 <= 11)
-	 * { Bonus v1 = new Bonus(installments, months[month + 2]); bonuses.add(v1); }
-	 * else if (month + 2 > 11) { int mon = (month + 2) - 12; Bonus v1 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v1); } if (month + 5 <= 11) {
-	 * Bonus v2 = new Bonus(installments, months[month + 5]); bonuses.add(v2); }
-	 * else if (month + 5 > 11) { int mon = (month + 5) - 12; Bonus v2 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v2); } if (month + 8 <= 11) {
-	 * Bonus v3 = new Bonus(installments, months[month + 8]); bonuses.add(v3); }
-	 * else if (month + 8 > 11) { int mon = (month + 8) - 12; Bonus v3 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v3); } if (month + 11 <= 11) {
-	 * Bonus v4 = new Bonus(installments, months[month + 11]); bonuses.add(v4); }
-	 * else if (month + 11 > 11) { int mon = (month + 11) - 12; Bonus v4 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v4); }
-	 * employee.setBonus(bonuses); } else if (installments == 3) { if (month + 3 <=
-	 * 11) { Bonus v1 = new Bonus(installments, months[month + 3]); bonuses.add(v1);
-	 * } else if (month + 3 > 11) { int mon = (month + 3) - 12; Bonus v1 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v1); } if (month + 7 <= 11) {
-	 * Bonus v2 = new Bonus(installments, months[month + 7]); bonuses.add(v2); }
-	 * else if (month + 7 > 11) { int mon = (month + 7) - 12; Bonus v2 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v2); } if (month + 11 <= 11) {
-	 * Bonus v3 = new Bonus(installments, months[month + 11]); bonuses.add(v3); }
-	 * else if (month + 11 > 11) { int mon = (month + 11) - 12; Bonus v3 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v3); }
-	 * employee.setBonus(bonuses); } else if (installments == 2) { if (month + 5 <=
-	 * 11) { Bonus v1 = new Bonus(installments, months[month + 5]); bonuses.add(v1);
-	 * } else if (month + 5 > 11) { int mon = (month + 5) - 12; Bonus v1 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v1); } if (month + 11 <= 11) {
-	 * Bonus v2 = new Bonus(installments, months[month + 11]); bonuses.add(v2); }
-	 * else if (month + 11 > 11) { int mon = (month + 11) - 12; Bonus v2 = new
-	 * Bonus(installments, months[mon]); bonuses.add(v2); }
-	 * employee.setBonus(bonuses); } } }
-	 * 
-	 * }
-	 */
 	@Override
 	public void updateEmployee(Employee employee) {
 		Employee emp = payrollRepository.findById(employee.getEmployeeId()).get();

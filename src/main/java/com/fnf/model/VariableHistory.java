@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
+
 @Entity
 public class VariableHistory {
 	@Id
@@ -16,7 +17,6 @@ public class VariableHistory {
 	private BigDecimal variableAmt;
 	@Transient
 	private int employeeId;
-
 
 	public VariableHistory() {
 
@@ -57,7 +57,5 @@ public class VariableHistory {
 	public void setEmployeeId(int employeeId) {
 		this.employeeId = employeeId;
 	}
-
-
 
 }

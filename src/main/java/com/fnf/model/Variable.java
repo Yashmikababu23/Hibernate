@@ -18,7 +18,6 @@ public class Variable {
 	@Transient
 	private int employeeId;
 
-
 	public Variable() {
 
 	}
@@ -58,7 +57,5 @@ public class Variable {
 	public void setEmployeeId(int employeeId) {
 		this.employeeId = employeeId;
 	}
-
-
 
 }

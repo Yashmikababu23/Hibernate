@@ -1,7 +1,7 @@
 package com.fnf.Response;
 
 public class ResponseObject {
-	
+
 	private StatusObject status;
 	private ErrorObject error;
 
@@ -20,7 +20,5 @@ public class ResponseObject {
 	public void setError(ErrorObject error) {
 		this.error = error;
 	}
-	
-
 
 }

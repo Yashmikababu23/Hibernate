@@ -17,32 +17,28 @@ import javax.persistence.Transient;
 @Entity
 public class EmployeeHistory {
 	@Id
-	// @GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="EMPLOYEE_ID")
+	@Column(name = "EMPLOYEE_ID")
 	private int employeeId;
 	private String employeeName;
 	private Date dateOfJoining;
-	@Transient
-	private String doj;
 	private Date paymentCycle;
-	@Transient
-	private String paymentCyc;
 	private BigDecimal fixedAmt;
 	private BigDecimal totalVariableAmt;
 	private int variableInstallments;
-	@OneToMany(cascade = CascadeType.ALL,orphanRemoval=true,fetch=FetchType.EAGER)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "qid")
 	@OrderColumn(name = "type")
 	private List<VariableHistory> variables;
 	private BigDecimal totalBonusAmt;
 	private int bonusInstallments;
-	@OneToMany(cascade = CascadeType.ALL,orphanRemoval=true,fetch=FetchType.EAGER)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "qid")
 	@OrderColumn(name = "type")
 	private List<BonusHistory> bonus;
 	private BigDecimal medicalInsurance;
 	private BigDecimal monthlyAmt;
 	private BigDecimal totalAmt;
+
 	public EmployeeHistory() {
 
 	}
@@ -162,22 +158,6 @@ public class EmployeeHistory {
 
 	public void setTotalAmt(BigDecimal totalAmt) {
 		this.totalAmt = totalAmt;
-	}
-
-	public String getPaymentCyc() {
-		return paymentCyc;
-	}
-
-	public void setPaymentCyc(String paymentCyc) {
-		this.paymentCyc = paymentCyc;
-	}
-
-	public String getDoj() {
-		return doj;
-	}
-
-	public void setDoj(String doj) {
-		this.doj = doj;
 	}
 
 }

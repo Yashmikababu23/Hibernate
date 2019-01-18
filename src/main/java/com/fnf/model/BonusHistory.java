@@ -18,7 +18,6 @@ public class BonusHistory {
 	@Transient
 	private int employeeId;
 
-	
 	public BonusHistory() {
 
 	}
@@ -58,7 +57,5 @@ public class BonusHistory {
 	public void setEmployeeId(int employeeId) {
 		this.employeeId = employeeId;
 	}
-
-
 
 }

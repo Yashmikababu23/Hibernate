@@ -7,7 +7,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="User_Details")
+@Table(name = "User_Details")
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -15,21 +15,27 @@ public class User {
 	private String userName;
 	private String emailId;
 	private String pwd;
+
 	public String getUserName() {
 		return userName;
 	}
+
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+
 	public String getEmailId() {
 		return emailId;
 	}
+
 	public void setEmailId(String emailId) {
 		this.emailId = emailId;
 	}
+
 	public String getPwd() {
 		return pwd;
 	}
+
 	public void setPwd(String pwd) {
 		this.pwd = pwd;
 	}

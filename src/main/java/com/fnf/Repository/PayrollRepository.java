@@ -11,13 +11,11 @@ import com.fnf.model.Employee;
 
 @Repository
 public interface PayrollRepository extends CrudRepository<Employee, Integer> {
-	
-	final String  monthFetchQuery = "select distinct e from Employee e "+
-	"left outer join fetch e.bonus b left outer join fetch e.variables order by e.employeeId";
+
+	final String monthFetchQuery = "select distinct e from Employee e "
+			+ "left outer join fetch e.bonus b left outer join fetch e.variables order by e.employeeId";
 
 	@Query(monthFetchQuery)
 	public List<Employee> findEmpByMonth();
-	
-
 
 }

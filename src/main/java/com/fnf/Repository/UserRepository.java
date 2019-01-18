@@ -7,7 +7,7 @@ import com.fnf.model.User;
 
 @Repository
 public interface UserRepository extends CrudRepository<User, Integer> {
-	
+
 	public User findByUserName(String userName);
 
 }

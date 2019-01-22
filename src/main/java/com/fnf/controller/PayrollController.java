@@ -83,6 +83,7 @@ public class PayrollController {
 			response.setError(error);
 			logger.error("Exception in upload " + e.getMessage());
 			return new ResponseEntity<ResponseObject>(response, HttpStatus.EXPECTATION_FAILED);
+			
 
 		}
 		ResponseObject response = new ResponseObject();
@@ -109,7 +110,6 @@ public class PayrollController {
 			error.setMessage("Employee details already exists please do update");
 			response.setError(error);
 			logger.error("Employee already Exists");
-			;
 			return new ResponseEntity<ResponseObject>(response, HttpStatus.CONFLICT);
 		}
 
@@ -136,16 +136,15 @@ public class PayrollController {
 			error.setMessage("Employee details does not exists");
 			response.setError(error);
 			logger.error("Unable to delete.Employee with Id " + employeeId + " not found");
-			;
 			return new ResponseEntity<ResponseObject>(response, HttpStatus.NOT_FOUND);
 		}
 		ResponseObject response = new ResponseObject();
 		StatusObject status = new StatusObject();
-		status.setCode(204);
+		status.setCode(200);
 		status.setMessage("Employee successfully deleted");
 		response.setStatus(status);
 		logger.info("Successfully Completed...");
-		return new ResponseEntity<ResponseObject>(response, HttpStatus.NO_CONTENT);
+		return new ResponseEntity<ResponseObject>(response, HttpStatus.OK);
 
 	}
 

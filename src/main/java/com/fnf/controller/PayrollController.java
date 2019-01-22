@@ -45,11 +45,11 @@ public class PayrollController {
 			return new ResponseEntity<List<EmployeeHistory>>(empHis, HttpStatus.OK);
 		}
 		ResponseObject response = new ResponseObject();
-		StatusObject status = new StatusObject();
-		status.setCode(204);
-		status.setMessage("Employee Details Not Found");
-		response.setStatus(status);
-		return new ResponseEntity<ResponseObject>(response, HttpStatus.NO_CONTENT);
+		ErrorObject error = new ErrorObject();
+		error.setCode(404);
+		error.setMessage("Employee Details Not Found");
+		response.setError(error);
+		return new ResponseEntity<ResponseObject>(response, HttpStatus.NOT_FOUND);
 	}
 
 	@GetMapping("/payroll/payrollByMonth/{month}")
@@ -59,11 +59,11 @@ public class PayrollController {
 			return new ResponseEntity<List<Employee>>(employees, HttpStatus.OK);
 		}
 		ResponseObject response = new ResponseObject();
-		StatusObject status = new StatusObject();
-		status.setCode(204);
-		status.setMessage("Employee Details Not Found");
-		response.setStatus(status);
-		return new ResponseEntity<ResponseObject>(response, HttpStatus.NO_CONTENT);
+		ErrorObject error = new ErrorObject();
+		error.setCode(404);
+		error.setMessage("Employee Details Not Found");
+		response.setError(error);
+		return new ResponseEntity<ResponseObject>(response, HttpStatus.NOT_FOUND);
 	}
 
 	@PostMapping("/payroll/upload")

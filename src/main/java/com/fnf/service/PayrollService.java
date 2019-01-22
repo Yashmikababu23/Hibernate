@@ -108,6 +108,7 @@ public class PayrollService implements IPayrollService {
 				boolean variableIndicator = false;
 				boolean bonusIndicator = false;
 				Employee emp = (Employee) itr.next();
+				calculateMonth(emp);
 				if (emp.getTotalVariableAmt() != null && emp.getTotalVariableAmt() != BigDecimal.ZERO) {
 					ListIterator<Variable> itrvar = emp.getVariables().listIterator();
 					while (itrvar.hasNext()) {
@@ -139,7 +140,60 @@ public class PayrollService implements IPayrollService {
 		return employees;
 
 	}
+private void calculateMonth(Employee employee) {
 
+	Date today = new Date();
+	Calendar cal = Calendar.getInstance();
+	cal.setTime(today);
+	int currentMonth = cal.get(Calendar.MONTH);
+	Date payCyc = employee.getPaymentCycle();
+	Calendar calc = Calendar.getInstance();
+	calc.setTime(payCyc);
+	int payMonth = calc.get(Calendar.MONTH);
+	Date doj = employee.getDateOfJoining();
+	Calendar calendar = Calendar.getInstance();
+	calendar.setTime(doj);
+	int joiningMonth = calendar.get(Calendar.MONTH);
+
+	if (currentMonth == payMonth) {
+
+		if (joiningMonth == payMonth) {
+			// calculate diff btw doj and paycyc
+			int days = Days.daysBetween(new LocalDate(doj.getTime()), new LocalDate(payCyc.getTime())).getDays()
+					+ 1;
+			// calculate no of days in paymonth
+			int payMonthDays = calc.getActualMaximum(Calendar.DAY_OF_MONTH);
+			// calcualte the salary to be paid for that month
+			float dueSalary = (employee.getMonthlyAmt().floatValue() / payMonthDays) * days;
+			BigDecimal monthAmt = new BigDecimal(dueSalary);
+			monthAmt.setScale(3, BigDecimal.ROUND_HALF_UP);
+			employee.setMonthlyAmt(monthAmt);
+
+		} else if (joiningMonth + 1 == payMonth) {
+			// calculate no of days in paymonth
+			int payMonthDays = calc.getActualMaximum(Calendar.DAY_OF_MONTH);
+			// calculate no of days in join month
+			int joinMonthDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+			// calculate the no of days btw doj and payday
+			int days = Days.daysBetween(new LocalDate(doj.getTime()), new LocalDate(payCyc.getTime())).getDays()
+					+ 1;
+			// no of days btw doj and payday - no of days in the payable month
+			int dueDays = days - payMonthDays;
+			// calculate the amount to be paid for the joining month
+			float dueSalary = (employee.getMonthlyAmt().floatValue() / joinMonthDays) * dueDays;
+
+			// calculate total amount to be paid for payable month
+			float totalSalary = dueSalary + employee.getMonthlyAmt().floatValue();
+			BigDecimal monthAmt = new BigDecimal(totalSalary);
+			monthAmt.setScale(3, BigDecimal.ROUND_HALF_UP);
+			employee.setMonthlyAmt(monthAmt);
+
+		}
+
+	}
+
+
+}
 	public void storeData(List<Employee> employees, List<Variable> variables, List<Bonus> bonuses) {
 		variables.sort((Variable v1, Variable v2) -> v1.getEmployeeId() - v2.getEmployeeId());
 		bonuses.sort((Bonus b1, Bonus b2) -> b1.getEmployeeId() - b2.getEmployeeId());

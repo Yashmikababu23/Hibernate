@@ -103,10 +103,10 @@ public class PayrollService implements IPayrollService {
 		List<Employee> employees = new ArrayList<>();
 		employees = payrollRepository.findEmpByMonth();
 		if (employees != null) {
-			boolean variableIndicator = false;
-			boolean bonusIndicator = false;
 			ListIterator<Employee> itr = employees.listIterator();
 			while (itr.hasNext()) {
+				boolean variableIndicator = false;
+				boolean bonusIndicator = false;
 				Employee emp = (Employee) itr.next();
 				if (emp.getTotalVariableAmt() != null && emp.getTotalVariableAmt() != BigDecimal.ZERO) {
 					ListIterator<Variable> itrvar = emp.getVariables().listIterator();
@@ -114,23 +114,19 @@ public class PayrollService implements IPayrollService {
 						Variable v = itrvar.next();
 						if (month.equalsIgnoreCase(v.getPayableMonth())) {
 							variableIndicator = true;
-							break;
 						} else {
 							itrvar.remove();
-							variableIndicator = false;
 						}
 					}
 				}
-				if (emp.getTotalVariableAmt() != null && emp.getTotalVariableAmt() != BigDecimal.ZERO) {
+				if (emp.getTotalBonusAmt() != null && emp.getTotalBonusAmt() != BigDecimal.ZERO) {
 					ListIterator<Bonus> itrbon = emp.getBonus().listIterator();
 					while (itrbon.hasNext()) {
 						Bonus b = itrbon.next();
 						if (month.equalsIgnoreCase(b.getPayableMonth())) {
 							bonusIndicator = true;
-							break;
 						} else {
 							itrbon.remove();
-							bonusIndicator = false;
 						}
 					}
 				}
